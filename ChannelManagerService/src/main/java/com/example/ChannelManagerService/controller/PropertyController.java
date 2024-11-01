@@ -1,5 +1,6 @@
 package com.example.ChannelManagerService.controller;
 
+import com.example.ChannelManagerService.model.Booking;
 import com.example.ChannelManagerService.model.Property;
 import com.example.ChannelManagerService.service.PropertySyncService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,5 +27,18 @@ public class PropertyController {
                 .subscribe();
 
         return ResponseEntity.ok("Property added successfully to Channel Manager and syncing initiated");
+    }
+
+    @PostMapping("/bookings")
+    public ResponseEntity<String> receiveBooking(@RequestBody Booking booking) {
+        System.out.println("Received booking notification for property: " + booking.getPropertyId());
+
+        // Step 1: Update availability across OTAs
+        propertySyncService.updateAvailabilityAcrossOTAs(booking.getPropertyId(), booking.getCheckInDate(), booking.getCheckOutDate());
+
+        // Step 2: Forward booking information to PMS
+        propertySyncService.notifyPMS(booking);
+
+        return ResponseEntity.ok("Booking processed and availability updated across OTAs");
     }
 }
